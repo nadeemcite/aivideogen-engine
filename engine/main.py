@@ -2,13 +2,14 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime
 
 from engine.config import describe_environment, load_job_info
 from engine.tasks import run_tasks
 
 
 def main() -> int:
-    print("[runner] starting")
+    print(f"[runner] starting at {datetime.now().isoformat()}")
     try:
         job_info = load_job_info()
         print(f"[runner] environment={json.dumps(describe_environment(), sort_keys=True)}")
