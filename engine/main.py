@@ -8,6 +8,7 @@ from engine.tasks import run_tasks
 
 
 def main() -> int:
+    print("[runner] starting")
     try:
         job_info = load_job_info()
         print(f"[runner] environment={json.dumps(describe_environment(), sort_keys=True)}")
