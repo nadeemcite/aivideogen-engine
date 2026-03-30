@@ -59,6 +59,7 @@ TASKS: dict[str, TaskHandler] = {
     "echo_summary": echo_summary,
     "probe_ffmpeg": probe_ffmpeg,
     "process_assets": process_assets,
+    "generate_slideshow": lambda _: print("[task:noop] no operation performed"),
 }
 
 
