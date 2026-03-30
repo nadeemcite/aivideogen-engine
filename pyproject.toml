@@ -4,7 +4,9 @@ version = "0.1.0"
 description = "Sample uv-based task runner image for Google Cloud Run Jobs"
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "psycopg[binary]>=3.3.3",
+]
 
 [project.scripts]
 engine-job = "engine.main:main"

@@ -4,9 +4,12 @@ Sample `uv`-based Python project that builds a Docker image for Google Cloud Run
 
 ## Runtime contract
 
-The container reads one required environment variable:
+The container reads these required environment variables:
 
 - `JOB_INFO_JSON`: JSON object describing the work to perform
+- `DATABASE_URL`: PostgreSQL connection string used after task execution
+- `MYVIDS_VIDEO_JOB_RUN_ID`: string identifier for the `"VideoJobRun"` row to update
+- `DATABASE_CA_PATH` (optional): CA certificate path used to enable SSL for PostgreSQL connections in production
 
 Example payload:
 
@@ -42,6 +45,10 @@ Run locally:
 
 ```bash
 export JOB_INFO_JSON='{"job_id":"sample-001","tasks":["echo_summary","probe_ffmpeg","process_assets"],"input_uri":"gs://example-bucket/input.mp4","output_uri":"gs://example-bucket/output/","options":{"preset":"fast","notify":"false"}}'
+export DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/DBNAME'
+export MYVIDS_VIDEO_JOB_RUN_ID='sample-video-job-run-id'
+# Optional in production when the server requires SSL.
+export DATABASE_CA_PATH='/etc/ssl/certs/db-ca.pem'
 uv run engine-job
 ```
 
@@ -64,6 +71,9 @@ Run locally:
 ```bash
 docker run --rm \
   -e JOB_INFO_JSON='{"job_id":"sample-001","tasks":["echo_summary","probe_ffmpeg","process_assets"],"input_uri":"gs://example-bucket/input.mp4","output_uri":"gs://example-bucket/output/","options":{"preset":"fast","notify":"false"}}' \
+  -e DATABASE_URL='postgresql://USER:PASSWORD@HOST:5432/DBNAME' \
+  -e MYVIDS_VIDEO_JOB_RUN_ID='sample-video-job-run-id' \
+  -e DATABASE_CA_PATH='/etc/ssl/certs/db-ca.pem' \
   engine:local
 ```
 
@@ -76,4 +86,12 @@ docker build -t us-central1-docker.pkg.dev/PROJECT_ID/REPOSITORY/engine:latest .
 docker push us-central1-docker.pkg.dev/PROJECT_ID/REPOSITORY/engine:latest
 ```
 
-The external service that owns Cloud Run Job creation/execution should pass `JOB_INFO_JSON` when it starts the job.
+After all tasks succeed, the runner connects to PostgreSQL using `DATABASE_URL`, verifies `"VideoJobRun".id` is a string-typed column, and commits:
+
+```sql
+update "VideoJobRun" set status = 'COMPLETED' where id = $1
+```
+
+If `DATABASE_CA_PATH` is set, the PostgreSQL connection is created with SSL enabled using that CA certificate.
+
+The external service that owns Cloud Run Job creation/execution should pass all required environment variables when it starts the job.

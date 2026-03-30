@@ -72,3 +72,9 @@ def describe_environment() -> dict[str, Any]:
         "task_count": os.getenv("CLOUD_RUN_TASK_COUNT"),
     }
 
+
+def get_required_env(name: str) -> str:
+    value = os.getenv(name)
+    if not isinstance(value, str) or not value:
+        raise ValueError(f"{name} is required")
+    return value

@@ -5,6 +5,7 @@ import sys
 from datetime import datetime
 
 from engine.config import describe_environment, load_job_info
+from engine.db import mark_video_job_run_completed
 from engine.tasks import run_tasks
 
 
@@ -15,10 +16,12 @@ def main() -> int:
         print(f"[runner] environment={json.dumps(describe_environment(), sort_keys=True)}")
         print(f"[runner] job_id={job_info.job_id} task_count={len(job_info.tasks)}")
         run_tasks(job_info)
+        video_job_run_id = mark_video_job_run_completed()
     except Exception as exc:
         print(f"[runner] failed: {exc}", file=sys.stderr)
         return 1
 
+    print(f"[runner] video_job_run_id={video_job_run_id} status=COMPLETED")
     print(f"[runner] success job_id={job_info.job_id}")
     return 0
 
